@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   UseGuards,
@@ -8,18 +9,27 @@ import {
 } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { ApiLoggerService } from '../api-logger/api-logger.service';
-import { CreateCompanyResponseDto } from './dto/create';
+import { CreateCompanyRequestDto } from './dto/create';
 import { JwtAuthGuard } from 'src/auth/guards/guard.jwt-auth';
 import { Request } from 'express';
+import { findAuthorizedUserResponseDto } from 'src/users/dto/find-authorized-user';
 
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
   private readonly logger = new ApiLoggerService(CompanyController.name);
+
+  @Get()
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  find(@Req() req: Request) {
+    return this.companyService.find(req['user'] as findAuthorizedUserResponseDto);
+  }
+
   @Post()
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
-  create(@Body() payload: CreateCompanyResponseDto, @Req() req: Request) {
+  create(@Body() payload: CreateCompanyRequestDto, @Req() req: Request) {
     return this.companyService.create(payload, req['user']['id']);
   }
 }

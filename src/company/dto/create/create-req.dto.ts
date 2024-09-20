@@ -1,7 +1,7 @@
 // create-company.dto.ts
 import { IsString, IsNumber, Min, Max } from 'class-validator';
 
-export class CreateCompanyResponseDto {
+export class CreateCompanyRequestDto {
   @IsString()
   companyName: string;
 
