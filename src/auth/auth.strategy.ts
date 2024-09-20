@@ -13,10 +13,11 @@ export class AuthStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { user_id: string }) {
-    // Check Authorization
-    const user = await this.usersService.findAuthoizedUser(payload.user_id);
+    const user = await this.usersService.findAuthorizedUser({
+      user_id: Number(payload.user_id),
+    });
     if (!user) throw new UnauthorizedException();
 
-    return user[0];
+    return user; // Return the user so it can be accessed in the controller
   }
 }

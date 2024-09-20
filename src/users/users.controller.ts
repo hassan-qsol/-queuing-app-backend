@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   UseGuards,
@@ -11,7 +12,8 @@ import { ApiLoggerService } from '../api-logger/api-logger.service';
 import { LoginInputDto } from './dto/login-input.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../auth/guards/guard.jwt-auth';
-import { CreateUserResponseDto } from './dto/create';
+import { CreateUserRequestDto } from './dto/create';
+import { Request } from 'express';
 
 @Controller('users')
 export class UsersController {
@@ -19,10 +21,19 @@ export class UsersController {
   private readonly logger = new ApiLoggerService(UsersController.name);
 
   @Post()
-  @HttpCode(200)
-  create(@Body() payload: CreateUserResponseDto) {
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(201)
+  create(@Body() payload: CreateUserRequestDto, @Req() req: Request) {
     this.logger.log(`Request for users create: ${JSON.stringify(payload)} `);
-    return this.usersService.create(payload);
+    console.log(req);
+    return this.usersService.create(payload, req['user']['id']);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  find() {
+    return this.usersService.find();
   }
 
   @Post('login')

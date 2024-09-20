@@ -5,7 +5,12 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import PasswordHash from '../auth/password.hash';
 import { ErrorUtil } from '../common/utils/error-util';
-import { CreateUserResponseDto } from './dto/create';
+import { CreateUserRequestDto } from './dto/create';
+import {
+  findAuthorizedUserRequestDto,
+  findAuthorizedUserResponseDto,
+} from './dto/find-authorized-user';
+import { FindUsersResponseDto } from './dto/find';
 
 @Injectable()
 export class UsersService {
@@ -15,10 +20,38 @@ export class UsersService {
     private readonly passwordHash: PasswordHash,
   ) {}
 
-  async create(payload: CreateUserResponseDto): Promise<string> {
-    console.log(payload)
-    return '';
+  async create(
+    payload: CreateUserRequestDto,
+    createdBy: number,
+  ): Promise<string> {
+    await this.db.users
+      .create({ data: { ...payload, created_by: createdBy } })
+      .catch((e) => {
+        console.error(e);
+        ErrorUtil.internalServerError('Unable to add manager user');
+      });
+
+    return 'Manager added successfully';
   }
+
+  async find(): Promise<FindUsersResponseDto[]> {
+    const users = await this.db.users
+      .findMany({
+        where: { user_type: 'MANAGER' },
+        select: { id: true, first_name: true, last_name: true },
+      })
+      .catch((e) => {
+        console.error(e);
+        ErrorUtil.internalServerError('Unable to find managers');
+      });
+    if (!users.length) ErrorUtil.notFound('Managers not found.');
+
+    return users.map((user) => ({
+      id: String(user.id),
+      name: user.first_name + ' ' + user.last_name,
+    }));
+  }
+
   async login(payload: LoginInputDto): Promise<LoginDto> {
     const user = await this.db.users.findFirst({
       where: { user_name: payload.userName },
@@ -26,7 +59,6 @@ export class UsersService {
     if (!user)
       ErrorUtil.notFound(`No user found for user name: ${payload.userName}`);
 
-     
     const isPasswordValid = this.passwordHash.CheckPassword(
       payload?.password,
       user?.password,
@@ -47,7 +79,7 @@ export class UsersService {
 
     return {
       id: user.id,
-      fullName: user.first_name+" "+user.last_name,
+      fullName: user.first_name + ' ' + user.last_name,
       userName: user.user_name,
       email: user.email,
       userType: user.user_type,
@@ -55,26 +87,14 @@ export class UsersService {
     };
   }
 
-  async findAuthoizedUser(user_id: string) {
-    const result = await this.db.$queryRaw`
-    SELECT 
-    md5(u.id) AS user_id,      -- Select the MD5 hashed user ID
-    u.user_name,  
-    u.email, 
-    u.full_name, 
-    u.created_by, 
-    ur.name AS role,
-    ur.id AS role_id
-FROM 
-    lms_hazwoper.user u
-INNER JOIN 
-    user_role AS ur
-ON 
-    ur.id = u.user_role_id 
-WHERE 
-    md5(u.id) = ${user_id} 
-    AND u.is_deleted = 0;
-  `;
+  async findAuthorizedUser({
+    user_id,
+  }: findAuthorizedUserRequestDto): Promise<findAuthorizedUserResponseDto | null> {
+    const result = await this.db.users.findFirst({
+      where: { id: user_id },
+    });
+    if (!result) return null;
+
     return result;
   }
 

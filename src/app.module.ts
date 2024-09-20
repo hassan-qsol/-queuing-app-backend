@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiLoggerModule } from './api-logger/api-logger.module';
 import { AuthStrategy } from './auth/auth.strategy';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthStrategy } from './auth/auth.strategy';
       signOptions: { expiresIn: '6h' }, // e.g. 30s, 7d, 24h
     }),
     UsersModule,
+    CompanyModule,
     DatabaseModule,
     ThrottlerModule.forRoot([
       {

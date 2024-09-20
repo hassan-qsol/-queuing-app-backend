@@ -1,1 +1,1 @@
-export * from './create-res.dto';
+export * from './create-req.dto';
