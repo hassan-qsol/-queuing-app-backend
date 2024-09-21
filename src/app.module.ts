@@ -10,6 +10,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { ApiLoggerModule } from './api-logger/api-logger.module';
 import { AuthStrategy } from './auth/auth.strategy';
 import { CompanyModule } from './company/company.module';
+import { ServiceModule } from './service/service.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { CompanyModule } from './company/company.module';
     }),
     UsersModule,
     CompanyModule,
+    ServiceModule,
+    TicketModule,
     DatabaseModule,
     ThrottlerModule.forRoot([
       {

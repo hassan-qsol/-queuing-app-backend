@@ -36,6 +36,12 @@ export class UsersController {
     return this.usersService.find();
   }
 
+  @Get('collectors')
+  @HttpCode(200)
+  collectors() {
+    return this.usersService.findCollectors();
+  }
+
   @Post('login')
   @HttpCode(200)
   login(@Body() loginDto: LoginInputDto): Promise<LoginDto> {

@@ -21,9 +21,9 @@ export class CompanyController {
 
   @Get()
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
   find(@Req() req: Request) {
-    return this.companyService.find(req['user'] as findAuthorizedUserResponseDto);
+    const user = req['user'] as undefined as findAuthorizedUserResponseDto;
+    return this.companyService.find(user);
   }
 
   @Post()

@@ -21,37 +21,74 @@ export class CompanyService {
         'Manager is already linked with a company! Please select other manager.',
       );
 
-    await this.db.companies
-      .create({
-        data: {
-          company_name: payload.companyName,
-          company_manager: payload.companyManager,
-          lat: payload.lat,
-          lng: payload.lng,
-          created_by: userId,
-        },
-      })
-      .catch((e) => {
-        if (e.code === 'P2002')
-          ErrorUtil.badRequest(
-            'Company name already exists! Please try a different one.',
-          );
+    await this.db.$transaction(async (prisma) => {
+      const company = await prisma.companies
+        .create({
+          data: {
+            company_name: payload.companyName,
+            company_manager: payload.companyManager,
+            lat: payload.lat,
+            lng: payload.lng,
+            created_by: userId,
+          },
+        })
+        .catch((e) => {
+          if (e.code === 'P2002')
+            ErrorUtil.badRequest(
+              'Company name already exists! Please try a different one.',
+            );
 
-        ErrorUtil.internalServerError('Unable to add company');
-      });
+          ErrorUtil.internalServerError('Unable to add company');
+        });
+      const weekdayPayload = payload.weekdays.map((day) => ({
+        weekday_id: day,
+        company_id: company.id,
+        created_by: userId,
+      }));
+      await prisma.company_operating_days
+        .createMany({ data: weekdayPayload })
+        .catch((e) => {
+          console.error(e.message);
+          ErrorUtil.internalServerError('Unable to add weekdays');
+        });
+    });
 
     return 'Company created successfully';
   }
 
-  async find(payload: findAuthorizedUserResponseDto): Promise<FindCompaniesResponseDto[]> {
-    let filter = {};
-    if (payload.user_type === 'MANAGER')
-      filter = {
-        where: { company_manager: payload.id },
-      };
+  async find(
+    payload: findAuthorizedUserResponseDto | undefined,
+  ): Promise<FindCompaniesResponseDto[]> {
+    const filter = {
+      include: {
+        operating_days: {
+          select: {
+            id: true,
+            weekday_id: true,
+            weekday: {
+              select: {
+                day_name: true,
+              },
+            },
+          },
+        },
+      },
+    };
+
+    if (payload?.user_type === 'MANAGER')
+      filter['where'] = { company_manager: payload.id };
 
     const companies = await this.db.companies.findMany(filter);
-    if(!companies.length) ErrorUtil.notFound("Companies not found.")
-    return companies;
+
+    if (!companies.length) ErrorUtil.notFound('Companies not found.');
+
+    return companies.map((company) => ({
+      id: company.id,
+      companyName: company.company_name,
+      companyManager: company.company_manager,
+      lat: company.lat,
+      lng: company.lng,
+      operating_days: company.operating_days,
+    }));
   }
 }

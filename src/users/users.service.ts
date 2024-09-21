@@ -11,6 +11,7 @@ import {
   findAuthorizedUserResponseDto,
 } from './dto/find-authorized-user';
 import { FindUsersResponseDto } from './dto/find';
+import { FindCollectorsResponseDto } from './dto/collectors';
 
 @Injectable()
 export class UsersService {
@@ -49,6 +50,24 @@ export class UsersService {
     return users.map((user) => ({
       id: String(user.id),
       name: user.first_name + ' ' + user.last_name,
+    }));
+  }
+
+  async findCollectors(): Promise<FindCollectorsResponseDto[]> {
+    const collectors = await this.db.collectors
+      .findMany({
+        where: { is_deleted: false },
+        select: { id: true, name: true },
+      })
+      .catch((e) => {
+        console.error(e);
+        ErrorUtil.internalServerError('Unable to find collectors');
+      });
+    if (!collectors.length) ErrorUtil.notFound('Collectors not found.');
+
+    return collectors.map((collector) => ({
+      id: String(collector.id),
+      name: collector.name,
     }));
   }
 

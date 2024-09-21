@@ -23,9 +23,6 @@ model users {
   is_deleted  Boolean   @default(false)
   is_active   Boolean   @default(true)
   created_by  Int?      @db.Int
-
-  // Relations
-  tickets tickets[] // One-to-many relation with tickets
 }
 
 model companies {
@@ -74,15 +71,30 @@ model company_operating_days {
 }
 
 model services {
-  id         Int      @id @default(autoincrement())
-  company_id Int      @db.Int
-  is_deleted Boolean  @default(false)
-  is_active  Boolean  @default(true)
-  created_by Int      @db.Int
-  created_at DateTime @default(now()) @db.DateTime(0)
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String   @db.VarChar(1000)
+  company_id  Int      @db.Int
+  is_deleted  Boolean  @default(false)
+  is_active   Boolean  @default(true)
+  created_by  Int      @db.Int
+  created_at  DateTime @default(now()) @db.DateTime(0)
 
   // Relations
   company companies @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  tickets tickets[] // One-to-many relation with tickets
+
+  @@unique([name, company_id]) // Composite unique constraint
+}
+
+model collectors {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.Text
+  created_at DateTime @default(now()) @db.DateTime(0)
+  is_deleted Boolean  @default(false)
+  is_active  Boolean  @default(true)
+
+  // Relations
   tickets tickets[] // One-to-many relation with tickets
 }
 
@@ -90,15 +102,15 @@ model tickets {
   id            Int           @id @default(autoincrement())
   ticket_number Int
   service_id    Int           @db.Int
-  customer_id   Int           @db.Int
+  collector_id  Int           @db.Int
   status        ETicketStatus @default(PENDING)
   details       String        @db.Text
   created_by    Int           @db.Int
   created_at    DateTime      @default(now()) @db.DateTime(0)
 
   // Relations
-  service  services @relation(fields: [service_id], references: [id], onDelete: Cascade)
-  customer users    @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  service   services   @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  collector collectors @relation(fields: [collector_id], references: [id], onDelete: Cascade)
 }
 
 // Enum for ticket status
