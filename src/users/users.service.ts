@@ -15,6 +15,7 @@ import { FindCollectorsResponseDto } from './dto/collectors';
 import { LoginCollectorRequestDto } from './dto/login-collector';
 import { EUserType } from '@prisma/client';
 import { LoginCollectorResponseDto } from './dto/login-collector/login-collector-res.dto';
+import { UserException } from '../common/exceptions';
 
 @Injectable()
 export class UsersService {
@@ -32,7 +33,7 @@ export class UsersService {
       .create({ data: { ...payload, created_by: createdBy } })
       .catch((e) => {
         console.error(e);
-        ErrorUtil.internalServerError('Unable to add manager user');
+        ErrorUtil.internalServerError(UserException.managerNotAdded());
       });
 
     return 'Manager added successfully';
@@ -46,9 +47,9 @@ export class UsersService {
       })
       .catch((e) => {
         console.error(e);
-        ErrorUtil.internalServerError('Unable to find managers');
+        ErrorUtil.internalServerError(UserException.managerNotFound());
       });
-    if (!users.length) ErrorUtil.notFound('Managers not found.');
+    if (!users.length) ErrorUtil.notFound(UserException.managerNotFound());
 
     return users.map((user) => ({
       id: String(user.id),
@@ -64,9 +65,10 @@ export class UsersService {
       })
       .catch((e) => {
         console.error(e);
-        ErrorUtil.internalServerError('Unable to find collectors');
+        ErrorUtil.internalServerError(UserException.collectorsNotFound());
       });
-    if (!collectors.length) ErrorUtil.notFound('Collectors not found.');
+    if (!collectors.length)
+      ErrorUtil.notFound(UserException.collectorsNotFound());
 
     return collectors.map((collector) => ({
       id: String(collector.id),
@@ -79,7 +81,9 @@ export class UsersService {
       where: { user_name: payload.userName },
     });
     if (!user)
-      ErrorUtil.notFound(`No user found for user name: ${payload.userName}`);
+      ErrorUtil.notFound(
+        UserException.userNotFoundWithUsername(payload.userName),
+      );
 
     const isPasswordValid = this.passwordHash.CheckPassword(
       payload?.password,
@@ -88,7 +92,7 @@ export class UsersService {
 
     // If password does not match, throw an error
     if (!isPasswordValid) {
-      ErrorUtil.unauthorized('Invalid password');
+      ErrorUtil.unauthorized(UserException.unauthorized());
     }
 
     // Step 3: Generate a JWT containing the user's ID and return it
@@ -116,7 +120,7 @@ export class UsersService {
       where: { cnic: payload.cnic },
     });
     if (!collector)
-      ErrorUtil.notFound(`No collector found for CNIC: ${payload.cnic}`);
+      ErrorUtil.notFound(UserException.collectorNotFoundCnic(payload.cnic));
 
     const accessToken = this.jwtService.sign({
       collector_id: collector.id,

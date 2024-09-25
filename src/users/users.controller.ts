@@ -35,6 +35,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   find() {
+    this.logger.log(`Request for users/find`);
     return this.usersService.find();
   }
 
@@ -42,6 +43,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   collectors() {
+    this.logger.log(`Request for users/collectors`);
     return this.usersService.findCollectors();
   }
 
