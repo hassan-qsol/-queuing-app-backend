@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { LoginInputDto } from './dto/login-input.dto';
-import { LoginDto } from './dto/login.dto';
+import { LoginInputDto } from './dto/login/login-req.dto';
+import { LoginDto } from './dto/login/login-res.dto';
 import { JwtService } from '@nestjs/jwt';
 import PasswordHash from '../auth/password.hash';
 import { ErrorUtil } from '../common/utils/error-util';

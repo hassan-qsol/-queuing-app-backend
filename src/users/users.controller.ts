@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ApiLoggerService } from '../api-logger/api-logger.service';
-import { LoginInputDto } from './dto/login-input.dto';
-import { LoginDto } from './dto/login.dto';
+import { LoginInputDto } from './dto/login/login-req.dto';
+import { LoginDto } from './dto/login/login-res.dto';
 import { JwtAuthGuard } from '../auth/guards/guard.jwt-auth';
 import { CreateUserRequestDto } from './dto/create';
 import { Request } from 'express';

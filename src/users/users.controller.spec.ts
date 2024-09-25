@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { LoginInputDto } from './dto/login-input.dto';
+import { LoginInputDto } from './dto/login/login-req.dto';
 import { Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { JwtService } from '@nestjs/jwt';

@@ -3,8 +3,8 @@ import { UsersService } from './users.service';
 import { DatabaseService } from 'src/database/database.service';
 import { JwtService } from '@nestjs/jwt';
 import PasswordHash from 'src/auth/password.hash';
-import { LoginInputDto } from './dto/login-input.dto';
-import { LoginDto } from './dto/login.dto';
+import { LoginInputDto } from './dto/login/login-req.dto';
+import { LoginDto } from './dto/login/login-res.dto';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 jest.mock('src/database/database.service');
