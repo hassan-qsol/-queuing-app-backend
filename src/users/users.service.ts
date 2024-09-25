@@ -8,10 +8,13 @@ import { ErrorUtil } from '../common/utils/error-util';
 import { CreateUserRequestDto } from './dto/create';
 import {
   findAuthorizedUserRequestDto,
-  findAuthorizedUserResponseDto,
+  findAuthorizedPersonaResponseDto,
 } from './dto/find-authorized-user';
 import { FindUsersResponseDto } from './dto/find';
 import { FindCollectorsResponseDto } from './dto/collectors';
+import { LoginCollectorRequestDto } from './dto/login-collector';
+import { EUserType } from '@prisma/client';
+import { LoginCollectorResponseDto } from './dto/login-collector/login-collector-res.dto';
 
 @Injectable()
 export class UsersService {
@@ -57,7 +60,7 @@ export class UsersService {
     const collectors = await this.db.collectors
       .findMany({
         where: { is_deleted: false },
-        select: { id: true, name: true },
+        select: { id: true, cnic: true },
       })
       .catch((e) => {
         console.error(e);
@@ -67,11 +70,11 @@ export class UsersService {
 
     return collectors.map((collector) => ({
       id: String(collector.id),
-      name: collector.name,
+      cnic: collector.cnic,
     }));
   }
 
-  async login(payload: LoginInputDto): Promise<LoginDto> {
+  async loginUser(payload: LoginInputDto): Promise<LoginDto> {
     const user = await this.db.users.findFirst({
       where: { user_name: payload.userName },
     });
@@ -106,15 +109,64 @@ export class UsersService {
     };
   }
 
-  async findAuthorizedUser({
-    user_id,
-  }: findAuthorizedUserRequestDto): Promise<findAuthorizedUserResponseDto | null> {
-    const result = await this.db.users.findFirst({
-      where: { id: user_id },
+  async loginCollector(
+    payload: LoginCollectorRequestDto,
+  ): Promise<LoginCollectorResponseDto> {
+    const collector = await this.db.collectors.findFirst({
+      where: { cnic: payload.cnic },
     });
-    if (!result) return null;
+    if (!collector)
+      ErrorUtil.notFound(`No collector found for CNIC: ${payload.cnic}`);
 
-    return result;
+    const accessToken = this.jwtService.sign({
+      collector_id: collector.id,
+    });
+
+    return {
+      id: collector.id,
+      userType: EUserType.CUSTOMER,
+      cnic: collector.cnic,
+      accessToken: accessToken,
+    };
+  }
+
+  async findAuthorizedPersona(
+    data: findAuthorizedUserRequestDto,
+  ): Promise<findAuthorizedPersonaResponseDto | null> {
+    const result: findAuthorizedPersonaResponseDto = {
+      isCollector: data.isCollector,
+      collector: { id: 0, cnic: '' },
+      user: {
+        id: 0,
+        user_name: '',
+        first_name: '',
+        last_name: '',
+        email: '',
+        user_type: EUserType.CUSTOMER,
+        created_by: null,
+      },
+    };
+    if (data.isCollector) {
+      const collector = await this.db.collectors.findFirst({
+        where: { id: data.id },
+      });
+      if (collector) {
+        result.isCollector = true;
+        result.collector = collector;
+        return result;
+      }
+    } else {
+      const user = await this.db.users.findFirst({
+        where: { id: data.id },
+      });
+      if (user) {
+        result.isCollector = true;
+        result.user = user;
+        return result;
+      }
+    }
+
+    if (result.collector.id === 0 && result.user.id === 0) return null;
   }
 
   async logout(request) {

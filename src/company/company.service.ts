@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateCompanyRequestDto } from './dto/create';
 import { ErrorUtil } from 'src/common/utils/error-util';
-import { findAuthorizedUserResponseDto } from 'src/users/dto/find-authorized-user';
+import { TUserAuthorized } from 'src/users/dto/find-authorized-user';
 import { FindCompaniesResponseDto } from './dto/find';
 
 @Injectable()
@@ -57,7 +57,7 @@ export class CompanyService {
   }
 
   async find(
-    payload: findAuthorizedUserResponseDto | undefined,
+    payload: TUserAuthorized | undefined,
   ): Promise<FindCompaniesResponseDto[]> {
     const filter = {
       include: {

@@ -12,12 +12,15 @@ export class AuthStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { user_id: string }) {
-    const user = await this.usersService.findAuthorizedUser({
-      user_id: Number(payload.user_id),
-    });
-    if (!user) throw new UnauthorizedException();
+  async validate(payload: { user_id?: string; collector_id?: string }) {
+    const isCollector = payload?.collector_id ? true : false;
+    const data = {
+      isCollector: isCollector,
+      id: isCollector ? Number(payload.collector_id) : Number(payload.user_id),
+    };
+    const persona = await this.usersService.findAuthorizedPersona(data);
+    if (!persona) throw new UnauthorizedException();
 
-    return user; // Return the user so it can be accessed in the controller
+    return persona; // Return the user so it can be accessed in the controller
   }
 }

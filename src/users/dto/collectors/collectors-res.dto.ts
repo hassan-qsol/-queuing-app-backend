@@ -1,4 +1,4 @@
 export class FindCollectorsResponseDto {
   id: string;
-  name: string;
+  cnic: string;
 }

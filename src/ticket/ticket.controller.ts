@@ -5,12 +5,17 @@ import {
   HttpCode,
   UseGuards,
   Req,
+  Get,
+  Query,
+  Patch,
 } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { ApiLoggerService } from '../api-logger/api-logger.service';
-import { GetTicketRequestDto } from './dto/get-ticket';
+import { GenerateTicketRequestDto } from './dto/generate-ticket';
 import { JwtAuthGuard } from 'src/auth/guards/guard.jwt-auth';
 import { Request } from 'express';
+import { FindQueueRequestDto } from './dto/find';
+import { UpdateQueueRequestDto } from './dto/update';
 
 @Controller('tickets')
 export class TicketController {
@@ -20,8 +25,30 @@ export class TicketController {
   @Post()
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
-  getTicket(@Body() payload: GetTicketRequestDto, @Req() req: Request) {
+  generateTicket(
+    @Body() payload: GenerateTicketRequestDto,
+    @Req() req: Request,
+  ) {
     this.logger.log(`Request for Create`);
-    return this.ticketService.getTicket(payload, req['user']['id']);
+    return this.ticketService.generateTicket(
+      payload,
+      req['user']['collector']['id'],
+    );
+  }
+
+  @Get()
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  find(@Query() payload: FindQueueRequestDto, @Req() req: Request) {
+    this.logger.log(`Request for Create`);
+    return this.ticketService.find(payload, req['user']['user']['id']);
+  }
+
+  @Patch()
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  update(@Body() payload: UpdateQueueRequestDto, @Req() req: Request) {
+    this.logger.log(`Request for Update`);
+    return this.ticketService.update(payload, req['user']['user']['id']);
   }
 }

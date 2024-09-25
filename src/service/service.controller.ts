@@ -27,6 +27,14 @@ export class ServiceController {
     return this.serviceService.find(payload);
   }
 
+  @Get('manager')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  findManagerServices(@Req() req: Request) {
+    this.logger.log(`Request for find manager services`);
+    return this.serviceService.findManagerServices(req['user']['user']['id']);
+  }
+
   @Post()
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)

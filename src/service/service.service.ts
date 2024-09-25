@@ -3,6 +3,8 @@ import { DatabaseService } from '../database/database.service';
 import { CreateServiceRequestDto } from './dto/create';
 import { ErrorUtil } from 'src/common/utils/error-util';
 import { FindServicesRequestDto, FindServicesResponseDto } from './dto/find';
+import { EUserType } from '@prisma/client';
+import { ManagerFindServicesResponseDto } from './dto/manager-find-services';
 
 @Injectable()
 export class ServiceService {
@@ -58,5 +60,37 @@ export class ServiceService {
     if (!services.length) ErrorUtil.notFound('Services not found.');
 
     return services;
+  }
+
+  async findManagerServices(
+    userId: number,
+  ): Promise<ManagerFindServicesResponseDto[]> {
+    const data = await this.db.vw_get_user_company.findFirst({
+      where: {
+        user_id: userId,
+        user_type: EUserType.MANAGER,
+        user_is_deleted: false,
+        company_is_deleted: false,
+      },
+    });
+    if (!data) ErrorUtil.notFound('Unable to find relevant data');
+    if (!data.user_is_active || !data.company_is_active)
+      ErrorUtil.badRequest('User or company is inactive');
+
+    const services = await this.db.services.findMany({
+      where: {
+        company_id: data.company_id,
+        is_deleted: false,
+      },
+    });
+
+    if (!services.length) ErrorUtil.notFound('Services not found.');
+
+    return services.map((service) => ({
+      id: service.id,
+      companyId: service.company_id,
+      description: service.description,
+      name: service.name,
+    }));
   }
 }

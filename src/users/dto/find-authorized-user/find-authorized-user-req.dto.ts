@@ -1,3 +1,4 @@
 export class findAuthorizedUserRequestDto {
-  user_id: number
+  id: number;
+  isCollector: boolean;
 }

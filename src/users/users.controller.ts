@@ -14,6 +14,8 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../auth/guards/guard.jwt-auth';
 import { CreateUserRequestDto } from './dto/create';
 import { Request } from 'express';
+import { LoginCollectorRequestDto } from './dto/login-collector';
+import { LoginCollectorResponseDto } from './dto/login-collector/login-collector-res.dto';
 
 @Controller('users')
 export class UsersController {
@@ -37,6 +39,7 @@ export class UsersController {
   }
 
   @Get('collectors')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   collectors() {
     return this.usersService.findCollectors();
@@ -46,7 +49,16 @@ export class UsersController {
   @HttpCode(200)
   login(@Body() loginDto: LoginInputDto): Promise<LoginDto> {
     this.logger.log(`Request for login ${JSON.stringify(loginDto)} `);
-    return this.usersService.login(loginDto);
+    return this.usersService.loginUser(loginDto);
+  }
+
+  @Post('login-collector')
+  @HttpCode(200)
+  loginCollector(
+    @Body() loginDto: LoginCollectorRequestDto,
+  ): Promise<LoginCollectorResponseDto> {
+    this.logger.log(`Request for login collector ${JSON.stringify(loginDto)} `);
+    return this.usersService.loginCollector(loginDto);
   }
 
   @Post('logout')

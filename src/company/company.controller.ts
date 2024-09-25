@@ -12,7 +12,7 @@ import { ApiLoggerService } from '../api-logger/api-logger.service';
 import { CreateCompanyRequestDto } from './dto/create';
 import { JwtAuthGuard } from 'src/auth/guards/guard.jwt-auth';
 import { Request } from 'express';
-import { findAuthorizedUserResponseDto } from 'src/users/dto/find-authorized-user';
+import { TUserAuthorized } from 'src/users/dto/find-authorized-user';
 
 @Controller('company')
 export class CompanyController {
@@ -22,7 +22,8 @@ export class CompanyController {
   @Get()
   @HttpCode(200)
   find(@Req() req: Request) {
-    const user = req['user'] as undefined as findAuthorizedUserResponseDto;
+    const user = req['user'] as undefined as TUserAuthorized;
+    console.log(user);
     return this.companyService.find(user);
   }
 

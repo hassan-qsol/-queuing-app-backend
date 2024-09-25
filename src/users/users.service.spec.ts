@@ -67,7 +67,7 @@ describe('UsersService', () => {
         access_token: 'test-token',
       };
 
-      const result = await service.login(loginDto);
+      const result = await service.loginUser(loginDto);
 
       expect(result).toEqual(expectedResult);
       expect(db.$queryRaw).toHaveBeenCalledWith(expect.anything());
@@ -86,7 +86,7 @@ describe('UsersService', () => {
 
       db.$queryRaw.mockResolvedValue([]);
 
-      await expect(service.login(loginDto)).rejects.toThrow(NotFoundException);
+      await expect(service.loginUser(loginDto)).rejects.toThrow(NotFoundException);
       expect(db.$queryRaw).toHaveBeenCalledWith(expect.anything());
       expect(passwordHash.CheckPassword).not.toHaveBeenCalled();
       expect(jwtService.sign).not.toHaveBeenCalled();
@@ -113,7 +113,7 @@ describe('UsersService', () => {
       db.$queryRaw.mockResolvedValue(userMock);
       passwordHash.CheckPassword.mockReturnValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(
+      await expect(service.loginUser(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(db.$queryRaw).toHaveBeenCalledWith(expect.anything());

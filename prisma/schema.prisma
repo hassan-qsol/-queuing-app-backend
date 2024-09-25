@@ -89,7 +89,7 @@ model services {
 
 model collectors {
   id         Int      @id @default(autoincrement())
-  name       String   @db.Text
+  cnic       String   @db.VarChar(13)
   created_at DateTime @default(now()) @db.DateTime(0)
   is_deleted Boolean  @default(false)
   is_active  Boolean  @default(true)
@@ -104,13 +104,27 @@ model tickets {
   service_id    Int           @db.Int
   collector_id  Int           @db.Int
   status        ETicketStatus @default(PENDING)
-  details       String        @db.Text
   created_by    Int           @db.Int
   created_at    DateTime      @default(now()) @db.DateTime(0)
 
   // Relations
   service   services   @relation(fields: [service_id], references: [id], onDelete: Cascade)
   collector collectors @relation(fields: [collector_id], references: [id], onDelete: Cascade)
+}
+
+// --- VIEWS
+
+model vw_get_user_company {
+  user_id            Int       @unique
+  company_id         Int       @unique
+  user_type          EUserType
+  user_is_deleted    Boolean
+  user_is_active     Boolean
+  company_name       String
+  first_name         String
+  last_name          String
+  company_is_deleted Boolean
+  company_is_active  Boolean
 }
 
 // Enum for ticket status
