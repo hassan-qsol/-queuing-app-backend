@@ -40,7 +40,7 @@ export class TicketController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   find(@Query() payload: FindQueueRequestDto, @Req() req: Request) {
-    this.logger.log(`Request for Create`);
+    this.logger.log(`Request for tickets find`);
     return this.ticketService.find(payload, req['user']['user']['id']);
   }
 
@@ -48,7 +48,7 @@ export class TicketController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   update(@Body() payload: UpdateQueueRequestDto, @Req() req: Request) {
-    this.logger.log(`Request for Update`);
+    this.logger.log(`Request for tickets Update`);
     return this.ticketService.update(payload, req['user']['user']['id']);
   }
 }
