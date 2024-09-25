@@ -4,13 +4,12 @@ export class FindCompaniesResponseDto {
   companyManager: number;
   lat: number;
   lng: number;
+  isOpen: boolean;
   operating_days: {
     id: number;
     weekday_id: number;
     weekday: {
-      day_name: string
-    }
+      day_name: string;
+    };
   }[];
-
-  
 }

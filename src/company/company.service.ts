@@ -4,6 +4,7 @@ import { CreateCompanyRequestDto } from './dto/create';
 import { ErrorUtil } from 'src/common/utils/error-util';
 import { TUserAuthorized } from 'src/users/dto/find-authorized-user';
 import { FindCompaniesResponseDto } from './dto/find';
+import { getDay } from 'date-fns'; // This function returns the current day (0 = Sunday, 1 = Monday, etc.)
 
 @Injectable()
 export class CompanyService {
@@ -20,7 +21,7 @@ export class CompanyService {
       ErrorUtil.badRequest(
         'Manager is already linked with a company! Please select other manager.',
       );
-      console.log(userId)
+    console.log(userId);
 
     await this.db.$transaction(async (prisma) => {
       const company = await prisma.companies
@@ -34,7 +35,7 @@ export class CompanyService {
           },
         })
         .catch((e) => {
-          console.error(e.message)
+          console.error(e.message);
           if (e.code === 'P2002')
             ErrorUtil.badRequest(
               'Company name already exists! Please try a different one.',
@@ -61,6 +62,8 @@ export class CompanyService {
   async find(
     payload: TUserAuthorized | undefined,
   ): Promise<FindCompaniesResponseDto[]> {
+    const today = getDay(new Date()); // Get today's day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+
     const filter = {
       include: {
         operating_days: {
@@ -77,20 +80,29 @@ export class CompanyService {
       },
     };
 
-    if (payload?.user_type === 'MANAGER')
+    if (payload?.user_type === 'MANAGER') {
       filter['where'] = { company_manager: payload.id };
+    }
 
     const companies = await this.db.companies.findMany(filter);
 
     if (!companies.length) ErrorUtil.notFound('Companies not found.');
 
-    return companies.map((company) => ({
-      id: company.id,
-      companyName: company.company_name,
-      companyManager: company.company_manager,
-      lat: company.lat,
-      lng: company.lng,
-      operating_days: company.operating_days,
-    }));
+    return companies.map((company) => {
+      // Check if today is in the company's operating days
+      const isOpen = company.operating_days.some(
+        (operatingDay) => operatingDay.weekday_id === today,
+      );
+
+      return {
+        id: company.id,
+        companyName: company.company_name,
+        companyManager: company.company_manager,
+        lat: company.lat,
+        lng: company.lng,
+        operating_days: company.operating_days,
+        isOpen, // Boolean indicating if the company is open today or not
+      };
+    });
   }
 }
