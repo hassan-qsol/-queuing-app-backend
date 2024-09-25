@@ -20,6 +20,7 @@ export class CompanyService {
       ErrorUtil.badRequest(
         'Manager is already linked with a company! Please select other manager.',
       );
+      console.log(userId)
 
     await this.db.$transaction(async (prisma) => {
       const company = await prisma.companies
@@ -33,6 +34,7 @@ export class CompanyService {
           },
         })
         .catch((e) => {
+          console.error(e.message)
           if (e.code === 'P2002')
             ErrorUtil.badRequest(
               'Company name already exists! Please try a different one.',

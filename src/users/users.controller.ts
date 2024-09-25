@@ -28,7 +28,7 @@ export class UsersController {
   create(@Body() payload: CreateUserRequestDto, @Req() req: Request) {
     this.logger.log(`Request for users create: ${JSON.stringify(payload)} `);
     console.log(req);
-    return this.usersService.create(payload, req['user']['id']);
+    return this.usersService.create(payload, req['user']['user']['id']);
   }
 
   @Get()

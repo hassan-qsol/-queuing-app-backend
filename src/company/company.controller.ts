@@ -21,9 +21,9 @@ export class CompanyController {
 
   @Get()
   @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
   find(@Req() req: Request) {
-    const user = req['user'] as undefined as TUserAuthorized;
-    console.log(user);
+    const user = req['user']['user'] as undefined as TUserAuthorized;
     return this.companyService.find(user);
   }
 
@@ -31,6 +31,6 @@ export class CompanyController {
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
   create(@Body() payload: CreateCompanyRequestDto, @Req() req: Request) {
-    return this.companyService.create(payload, req['user']['id']);
+    return this.companyService.create(payload, req['user']['user']['id']);
   }
 }

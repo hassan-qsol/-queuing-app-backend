@@ -104,7 +104,7 @@ export class TicketService {
           collector: {
             select: {
               id: true,
-              cnic: true, // Include only the cnic field from the collector
+              cnic: true,
             },
           },
         },
@@ -117,13 +117,10 @@ export class TicketService {
         ErrorUtil.internalServerError('Unable to get tickets queue.');
       });
     if (!tickets.length) ErrorUtil.notFound('Tickets queue not found.');
-
     // Find the latest pending ticket
-    const latestPendingTicket = tickets
-      .reverse()
-      .find(
-        (ticket) => ticket.status === 'PENDING' || ticket.status === 'PROCESS',
-      );
+    const latestPendingTicket = tickets.find(
+      (ticket) => ticket.status === 'PENDING' || ticket.status === 'PROCESS',
+    );
 
     // Map the tickets and set myTurn based on the latest pending ticket
     return tickets.map((ticket) => ({

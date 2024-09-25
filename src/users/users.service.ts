@@ -116,11 +116,21 @@ export class UsersService {
   async loginCollector(
     payload: LoginCollectorRequestDto,
   ): Promise<LoginCollectorResponseDto> {
-    const collector = await this.db.collectors.findFirst({
+    let collector = await this.db.collectors.findFirst({
       where: { cnic: payload.cnic },
     });
+
     if (!collector)
-      ErrorUtil.notFound(UserException.collectorNotFoundCnic(payload.cnic));
+      collector = await this.db.collectors
+        .create({
+          data: {
+            cnic: payload.cnic,
+          },
+        })
+        .catch((e) => {
+          console.error(e);
+          ErrorUtil.internalServerError(UserException.collectorNotLogin());
+        });
 
     const accessToken = this.jwtService.sign({
       collector_id: collector.id,

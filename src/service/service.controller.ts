@@ -40,6 +40,6 @@ export class ServiceController {
   @UseGuards(JwtAuthGuard)
   create(@Body() payload: CreateServiceRequestDto, @Req() req: Request) {
     this.logger.log(`Request for Create`);
-    return this.serviceService.create(payload, req['user']['id']);
+    return this.serviceService.create(payload, req['user']['user']['id']);
   }
 }

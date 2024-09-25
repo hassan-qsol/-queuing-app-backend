@@ -1,8 +1,4 @@
 export class UserException {
-  static collectorNotFoundCnic(cnic: string): string {
-    return `No collector found for CNIC: ${cnic}`;
-  }
-
   static managerNotAdded(): string {
     return `Unable to add manager user.`;
   }
@@ -13,6 +9,10 @@ export class UserException {
 
   static collectorsNotFound(): string {
     return `Unable to find collectors.`;
+  }
+
+  static collectorNotLogin(): string {
+    return `Unable to login.`;
   }
 
   static userNotFoundWithUsername(userName: string): string {
