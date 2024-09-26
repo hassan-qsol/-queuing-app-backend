@@ -3,9 +3,10 @@ import { DatabaseService } from '../database/database.service';
 import { GenerateTicketRequestDto } from './dto/generate-ticket';
 import { startOfDay, endOfDay } from 'date-fns';
 import { ETicketStatus } from '@prisma/client';
-import { ErrorUtil } from 'src/common/utils/error-util';
+import { ErrorUtil } from 'src/common/utils/errors.utils';
 import { FindQueueRequestDto, FindQueueResponseDto } from './dto/find';
 import { UpdateQueueRequestDto } from './dto/update';
+import { TicketException } from 'src/common/exceptions/ticket.exception';
 
 const today = new Date(),
   startOfToday = startOfDay(today),
@@ -40,7 +41,7 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to get existing ticket');
+        ErrorUtil.internalServerError(TicketException.unableToGetTicket());
       });
 
     // If the collector already has a ticket, return that ticket number
@@ -60,7 +61,7 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to get last ticket');
+        ErrorUtil.internalServerError(TicketException.unableToGetLastTicket());
       });
 
     // Calculate the next ticket_number (start from 0 if no previous tickets for today)
@@ -79,7 +80,7 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to generate ticket');
+        ErrorUtil.internalServerError(TicketException.unableToGenerateTicket());
       });
 
     return nextTicketNumber;
@@ -114,9 +115,9 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to get tickets queue.');
+        ErrorUtil.internalServerError(TicketException.unableToGetTicketQueue());
       });
-    if (!tickets.length) ErrorUtil.notFound('Tickets queue not found.');
+    if (!tickets.length) ErrorUtil.notFound(TicketException.queueNotFound());
     // Find the latest pending ticket
     const latestPendingTicket = tickets.find(
       (ticket) => ticket.status === 'PENDING' || ticket.status === 'PROCESS',
@@ -152,7 +153,7 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to update tickets queue.');
+        ErrorUtil.internalServerError(TicketException.queueNotUpdated());
       });
 
     return 'Tickets queue updated.';
@@ -168,9 +169,7 @@ export class TicketService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError(
-          'Something went wrong! Please contact administration.',
-        );
+        ErrorUtil.internalServerError(TicketException.contactAdministration());
       });
     if (!company) throw new UnauthorizedException();
   }

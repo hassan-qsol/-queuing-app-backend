@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateServiceRequestDto } from './dto/create';
-import { ErrorUtil } from 'src/common/utils/error-util';
+import { ErrorUtil } from 'src/common/utils/errors.utils';
 import { FindServicesRequestDto, FindServicesResponseDto } from './dto/find';
 import { EUserType } from '@prisma/client';
 import { ManagerFindServicesResponseDto } from './dto/manager-find-services';
+import { ServiceException } from 'src/common/exceptions/service.exception';
 
 @Injectable()
 export class ServiceService {
@@ -26,9 +27,7 @@ export class ServiceService {
     });
 
     if (serviceExists)
-      ErrorUtil.badRequest(
-        'A service with this name is already linked with the company! Please use a different name.',
-      );
+      ErrorUtil.badRequest(ServiceException.serviceAlreadyExists());
 
     await this.db.services
       .create({
@@ -41,7 +40,7 @@ export class ServiceService {
       })
       .catch((e) => {
         console.error(e.message);
-        ErrorUtil.internalServerError('Unable to add service');
+        ErrorUtil.internalServerError(ServiceException.unableToAddService());
       });
 
     return 'Service created successfully';
@@ -57,7 +56,8 @@ export class ServiceService {
       },
     });
 
-    if (!services.length) ErrorUtil.notFound('Services not found.');
+    if (!services.length)
+      ErrorUtil.notFound(ServiceException.servicesNotFound());
 
     return services;
   }
@@ -73,9 +73,9 @@ export class ServiceService {
         company_is_deleted: false,
       },
     });
-    if (!data) ErrorUtil.notFound('Unable to find relevant data');
+    if (!data) ErrorUtil.notFound(ServiceException.relevantDataNotFound());
     if (!data.user_is_active || !data.company_is_active)
-      ErrorUtil.badRequest('User or company is inactive');
+      ErrorUtil.badRequest(ServiceException.inactiveUserCompany());
 
     const services = await this.db.services.findMany({
       where: {
@@ -84,7 +84,8 @@ export class ServiceService {
       },
     });
 
-    if (!services.length) ErrorUtil.notFound('Services not found.');
+    if (!services.length)
+      ErrorUtil.notFound(ServiceException.servicesNotFound());
 
     return services.map((service) => ({
       id: service.id,

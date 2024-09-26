@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateCompanyRequestDto } from './dto/create';
-import { ErrorUtil } from 'src/common/utils/error-util';
+import { ErrorUtil } from 'src/common/utils/errors.utils';
 import { TUserAuthorized } from 'src/users/dto/find-authorized-user';
 import { FindCompaniesResponseDto } from './dto/find';
 import { getDay } from 'date-fns'; // This function returns the current day (0 = Sunday, 1 = Monday, etc.)
+import { CompanyException } from 'src/common/exceptions';
 
 @Injectable()
 export class CompanyService {
@@ -18,10 +19,7 @@ export class CompanyService {
       where: { company_manager: payload.companyManager },
     });
     if (userExists)
-      ErrorUtil.badRequest(
-        'Manager is already linked with a company! Please select other manager.',
-      );
-    console.log(userId);
+      ErrorUtil.badRequest(CompanyException.managerAlreadyLinked());
 
     await this.db.$transaction(async (prisma) => {
       const company = await prisma.companies
@@ -37,12 +35,11 @@ export class CompanyService {
         .catch((e) => {
           console.error(e.message);
           if (e.code === 'P2002')
-            ErrorUtil.badRequest(
-              'Company name already exists! Please try a different one.',
-            );
+            ErrorUtil.badRequest(CompanyException.managerAlreadyLinked());
 
-          ErrorUtil.internalServerError('Unable to add company');
+          ErrorUtil.internalServerError(CompanyException.unableToAddCompany());
         });
+
       const weekdayPayload = payload.weekdays.map((day) => ({
         weekday_id: day,
         company_id: company.id,
@@ -80,13 +77,12 @@ export class CompanyService {
       },
     };
 
-    if (payload?.user_type === 'MANAGER') {
+    if (payload?.user_type === 'MANAGER')
       filter['where'] = { company_manager: payload.id };
-    }
 
     const companies = await this.db.companies.findMany(filter);
 
-    if (!companies.length) ErrorUtil.notFound('Companies not found.');
+    if (!companies.length) ErrorUtil.notFound(CompanyException.companyNotFound());
 
     return companies.map((company) => {
       // Check if today is in the company's operating days

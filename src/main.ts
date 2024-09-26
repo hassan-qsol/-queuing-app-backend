@@ -28,7 +28,7 @@ async function bootstrap() {
 
   // Enable CORS with multiple origins
   app.enableCors({
-    origin: ['https://ehs.hazwoper-osha.com', 'http://localhost:5173'], // Allow origins
+    origin: ['http://localhost:5173'], // Allow origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true, // If you need to handle cookies or authentication headers

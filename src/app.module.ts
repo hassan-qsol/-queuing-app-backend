@@ -12,6 +12,7 @@ import { AuthStrategy } from './auth/auth.strategy';
 import { CompanyModule } from './company/company.module';
 import { ServiceModule } from './service/service.module';
 import { TicketModule } from './ticket/ticket.module';
+import { CollectorModule } from './collector/collector.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TicketModule } from './ticket/ticket.module';
     CompanyModule,
     ServiceModule,
     TicketModule,
+    CollectorModule,
     DatabaseModule,
     ThrottlerModule.forRoot([
       {

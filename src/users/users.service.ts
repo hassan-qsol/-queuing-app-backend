@@ -4,17 +4,14 @@ import { LoginInputDto } from './dto/login/login-req.dto';
 import { LoginDto } from './dto/login/login-res.dto';
 import { JwtService } from '@nestjs/jwt';
 import PasswordHash from '../auth/password.hash';
-import { ErrorUtil } from '../common/utils/error-util';
+import { ErrorUtil } from '../common/utils/errors.utils';
 import { CreateUserRequestDto } from './dto/create';
 import {
   findAuthorizedUserRequestDto,
   findAuthorizedPersonaResponseDto,
 } from './dto/find-authorized-user';
 import { FindUsersResponseDto } from './dto/find';
-import { FindCollectorsResponseDto } from './dto/collectors';
-import { LoginCollectorRequestDto } from './dto/login-collector';
 import { EUserType } from '@prisma/client';
-import { LoginCollectorResponseDto } from './dto/login-collector/login-collector-res.dto';
 import { UserException } from '../common/exceptions';
 
 @Injectable()
@@ -57,25 +54,6 @@ export class UsersService {
     }));
   }
 
-  async findCollectors(): Promise<FindCollectorsResponseDto[]> {
-    const collectors = await this.db.collectors
-      .findMany({
-        where: { is_deleted: false },
-        select: { id: true, cnic: true },
-      })
-      .catch((e) => {
-        console.error(e);
-        ErrorUtil.internalServerError(UserException.collectorsNotFound());
-      });
-    if (!collectors.length)
-      ErrorUtil.notFound(UserException.collectorsNotFound());
-
-    return collectors.map((collector) => ({
-      id: String(collector.id),
-      cnic: collector.cnic,
-    }));
-  }
-
   async loginUser(payload: LoginInputDto): Promise<LoginDto> {
     const user = await this.db.users.findFirst({
       where: { user_name: payload.userName },
@@ -109,37 +87,6 @@ export class UsersService {
       userName: user.user_name,
       email: user.email,
       userType: user.user_type,
-      accessToken: accessToken,
-    };
-  }
-
-  async loginCollector(
-    payload: LoginCollectorRequestDto,
-  ): Promise<LoginCollectorResponseDto> {
-    let collector = await this.db.collectors.findFirst({
-      where: { cnic: payload.cnic },
-    });
-
-    if (!collector)
-      collector = await this.db.collectors
-        .create({
-          data: {
-            cnic: payload.cnic,
-          },
-        })
-        .catch((e) => {
-          console.error(e);
-          ErrorUtil.internalServerError(UserException.collectorNotLogin());
-        });
-
-    const accessToken = this.jwtService.sign({
-      collector_id: collector.id,
-    });
-
-    return {
-      id: collector.id,
-      userType: EUserType.CUSTOMER,
-      cnic: collector.cnic,
       accessToken: accessToken,
     };
   }
